@@ -1,54 +1,54 @@
 import { useEffect, useState } from "react";
-import { Emails } from "./users";
+import { Emails } from "./emails";
 import "./app.css";
 import Table from "./Table";
 import axios from "axios";
 
 //////////////////////BASIC SEARCH
 
-function App() {
-  const [query, setQuery] = useState("");
-  return (
-    <div className="app">
-      <input
-        className="search"
-        placeholder="Search..."
-        onChange={(e) => setQuery(e.target.value.toLowerCase())}
-      />
-      <ul className="list">
-        {Emails.filter((asd) =>
-          asd.subject.toLowerCase().includes(query)
-        ).map((email) => (
-          <li className="listItem" key={email.id}>
-            {email.subject}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-/////////////////////SEARCH ON A DATATABLE
-
 // function App() {
 //   const [query, setQuery] = useState("");
-//   const keys = ["first_name", "last_name", "email"];
-//   const search = (data) => {
-//     return data.filter((item) =>
-//       keys.some((key) => item[key].toLowerCase().includes(query))
-//     );
-//   };
-// return (
-//   <div className="app">
+//   return (
+//     <div className="app">
 //       <input
 //         className="search"
 //         placeholder="Search..."
 //         onChange={(e) => setQuery(e.target.value.toLowerCase())}
 //       />
-//     {<Table data={Search(Users)} />}
-//   </div>
-// );
+//       <ul className="list">
+//         {Emails.filter((asd) =>
+//           asd.subject.toLowerCase().includes(query)
+//         ).map((email) => (
+//           <li className="listItem" key={email.id}>
+//             {email.subject}
+//           </li>
+//         ))}
+//       </ul>
+//     </div>
+//   );
 // }
+
+/////////////////////SEARCH ON A DATATABLE
+
+function App() {
+  const [query, setQuery] = useState("");
+  const keys = ["subject", "sender", "toRecipients"];
+  const search = (data) => {
+    return data.filter((item) =>
+      keys.some((key) => item[key].toLowerCase().includes(query))
+    );
+  };
+return (
+  <div className="app">
+      <input
+        className="search"
+        placeholder="Search..."
+        onChange={(e) => setQuery(e.target.value.toLowerCase())}
+      />
+    {<Table data={search(Emails)} />}
+  </div>
+);
+}
 
 
 ////////////////////// API SEARCH
