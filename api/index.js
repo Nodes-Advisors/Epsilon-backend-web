@@ -1,6 +1,6 @@
 import express from "express";
 const app = express();
-import { Users } from "./users.js";
+import { Emails } from "./emails.js";
 import cors from "cors";
 
 app.use(cors());
@@ -8,7 +8,7 @@ app.use(cors());
 app.get("/", (req, res) => {
   const { q } = req.query;
 
-  const keys = ["first_name", "last_name", "email"];
+  const keys = ["subject", "sender", "toRecipients"];
 
   const search = (data) => {
     return data.filter((item) =>
@@ -16,7 +16,7 @@ app.get("/", (req, res) => {
     );
   };
 
-  q ? res.json(search(Users).slice(0, 10)) : res.json(Users.slice(0, 10));
+  q ? res.json(search(Emails).slice(0, 10)) : res.json(Emails.slice(0, 10));
 });
 
 app.listen(5001, () => console.log("API is working!"));
