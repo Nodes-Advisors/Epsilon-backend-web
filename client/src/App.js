@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Emails } from "./emails";
+// import { Emails } from "./emails";
 import "./app.css";
 import Table from "./Table";
 import axios from "axios";
