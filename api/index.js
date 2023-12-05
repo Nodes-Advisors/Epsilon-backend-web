@@ -81,8 +81,8 @@ import cors from 'cors';
 const app = express();
 app.use(cors());
 
-const uri = 'mongodb+srv://GraceLTQ:Apple_030711@outboundemailcluster.xapxelz.mongodb.net/';
-const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+const uri = 'mongodb+srv://GraceLTQ:Apple_030711@outboundemailcluster.xapxelz.mongodb.net/?retryWrites=true&w=majority';
+const client = new MongoClient(uri);
 
 const dbName = 'OutboundEmailCluster';
 const collectionName = 'emaildata';
