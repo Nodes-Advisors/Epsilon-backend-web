@@ -90,8 +90,7 @@ function App() {
   const [query, setQuery] = useState("");
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
-  const [senders, setSenders] = useState([]);
-  const [investorEmails, setInvestorEmails] = useState([]);
+  const [recipients, setRecipients] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -99,51 +98,28 @@ function App() {
       setData(res.data);
       setFilteredData(res.data);
 
-      // Extract unique senders
-      const uniqueSenders = [...new Set(res.data.map(item => item.sender))];
-      setSenders(uniqueSenders);
-
-      // Extract investor emails
-      const investorEmails = [...new Set(res.data.map(item => item.isInvestorEmail))];
-      setInvestorEmails(investorEmails);
+      // Extract unique recipients
+      const uniqueRecipients = [...new Set(res.data.map(item => item.toRecipients))];
+      setRecipients(uniqueRecipients);
     };
     if (query.length === 0 || query.length > 2) fetchData();
   }, [query]);
 
-  // Filter by each unique sender
-  const filterBySender = (sender) => {
-    const filteredSender = data.filter(item => item.sender === sender);
-    setFilteredData(filteredSender);
-  };
-
-  // Filter by whether the emails isInvestorEmail
-  const filterByInvestorEmail = (investors) => {
-    const filteredInvestor = data.filter(item => item.isInvestorEmail === investors);
-    setFilteredData(filteredInvestor);
+  const filterByRecipient = (recipient) => {
+    const filtered = data.filter(item => item.toRecipients === recipient);
+    setFilteredData(filtered);
   };
 
   return (
     <div className="app">
-
-      {/* Side bar buttons for selecting senders */}
       <div className="sidebar">
-        {senders.map(sender => (
-          <button key={sender} onClick={() => filterBySender(sender)}>
-            {sender}
+        {recipients.map(recipient => (
+          <button key={recipient} onClick={() => filterByRecipient(recipient)}>
+            {recipient}
           </button>
         ))}
       </div>
 
-      {/* Side bar buttons for selecting investor emails (true / false) */}
-      <div className="sidebar">
-        {investorEmails.map(investors => (
-          <button key={investors} onClick={() => filterByInvestorEmail(investors)}>
-            {investors}
-          </button>
-        ))}
-      </div>
-
-      {/* Search bar and display info table */}
       <div className="main-content">
         <input
           className="search"

@@ -21,16 +21,17 @@ const Table = ({ data }) => {
     <table>
       <tbody>
         <tr>
-          <th>Outbound Email Interactions</th>
+          <th>Inbound Email Interactions</th>
         </tr>
         {data.map((item) => {
           const senderName = extractName(item.sender);
-          const recipientName = extractName(item.toRecipients);
-          const recipientDomain = extractDomain(item.toRecipients);
+          // const recipientName = extractName(item.toRecipients);
+          // const recipientDomain = extractDomain(item.toRecipients);
 
           return (
             <tr key={item.id}>
-              <td>{senderName} connected with {recipientName} at {recipientDomain} about {item.subject}</td>
+              {/* <td>{senderName} connected with {recipientName} at {recipientDomain} about {item.subject}</td> */}
+              <td>{senderName} talked about {item.subject}</td>
             </tr>
           );
         })}
