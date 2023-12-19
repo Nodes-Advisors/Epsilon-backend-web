@@ -31,7 +31,7 @@ const Table = ({ data }) => {
           return (
             <tr key={item.id}>
               {/* <td>{senderName} connected with {recipientName} at {recipientDomain} about {item.subject}</td> */}
-              <td>{senderName} talked about {item.subject}</td>
+              <td>{(item.isInvestorEmail).toString()}: {senderName} talked about {item.subject}</td>
             </tr>
           );
         })}

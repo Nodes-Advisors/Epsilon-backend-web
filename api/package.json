@@ -2,9 +2,9 @@
   "name": "api",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "indexInbound.js",
   "scripts": {
-    "start": "nodemon index.js"
+    "start": "nodemon indexInbound.js"
   },
   "keywords": [],
   "author": "",

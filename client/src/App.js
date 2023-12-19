@@ -104,7 +104,7 @@ function App() {
       setSenders(uniqueSenders);
 
       // Extract investor emails
-      const investorEmails = [...new Set(res.data.map(item => item.isInvestorEmail))];
+      const investorEmails = [...new Set(res.data.map(item => (item.isInvestorEmail).toString()))];
       setInvestorEmails(investorEmails);
     };
     if (query.length === 0 || query.length > 2) fetchData();
@@ -118,7 +118,7 @@ function App() {
 
   // Filter by whether the emails isInvestorEmail
   const filterByInvestorEmail = (investors) => {
-    const filteredInvestor = data.filter(item => item.isInvestorEmail === investors);
+    const filteredInvestor = data.filter(item => (item.isInvestorEmail).toString() === investors);
     setFilteredData(filteredInvestor);
   };
 
