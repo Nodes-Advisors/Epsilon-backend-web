@@ -1,9 +1,9 @@
 import express from 'express';
 import { MongoClient } from 'mongodb';
 import cors from 'cors';
-import memjs from 'memjs';
 import nodemailer from 'nodemailer';
 import jwt from 'jsonwebtoken';
+import schedule from 'node-schedule';
 
 const app = express();
 app.use(cors());
@@ -14,8 +14,6 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 
 const dbName = 'dev';
 const InboundCollectionName = 'InboundEmails';
-
-const mc = memjs.Client.create("localhost:11211");
 
 const transporter = nodemailer.createTransport({
   host: 'smtp-mail.outlook.com',
@@ -133,31 +131,99 @@ app.get('/outboundEmails', async (req, res) => {
   }
 });
 
+app.post('/sendRequest', async (req, res) => {
+  console.log('sendRequest');
+  try {
+    await client.connect();
+    const database = client.db('dev');
+    const collection = database.collection('UsersFundRequests');
+    const { 
+      requestName,
+      approvers,
+      deal,
+      contactPerson,
+      priority,
+      details,
+      email
+    } = req.body;
+
+    await collection.insertOne({
+      'Type of Request': requestName,
+      'Approvers or Assignees': approvers,
+      'Type of Deal': deal,
+      'Contact Person': contactPerson,
+      'Priority': priority,
+      'Additional details': details,
+      'Created by': email
+    });
+
+    res.status(200).send('Send request successfully!');
+  } catch (error) {
+    console.error('Error updating data:', error);
+    res.status(500).send('Error updating data');
+  } finally {
+    await client.close();
+  }
+});
+
+app.post('/logout', async (req, res) => {
+  try {
+    await client.connect();
+    const database = client.db('dev');
+    const collection = database.collection('NodesTeam');
+    const { email } = req.body;
+    await collection.updateOne(
+      { email },
+      {
+        $set: {
+          last_time_online: new Date(),
+        },
+      }
+    );
+
+    res.status(200).send('Logged out successfully!');
+  } catch (error) {
+    console.error('Error updating data:', error);
+    res.status(500).send('Error updating data');
+  } finally {
+    await client.close();
+  }
+});
+
 app.post('/login', async (req, res) => {
   try {
     await client.connect();
     const database = client.db('dev');
-    const collection = database.collection('Users');
-    const { email, verificationCode } = req.query;
+    const collection = database.collection('NodesTeam');
+    const { email, verificationCode } = req.body;
 
     const user = await collection.findOne({ email });
 
-    if (!user) {
-      return res.status(404).send('User not found');
+    if (!user || user.isActive === false) {
+      return res.status(404).send('User has not signed up!');
     }
 
-    mc.get(email, (err, value) => {
-      if (err) throw err;
+    if (user.email.includes('nodesadvisors') && (user.isActive === undefined || user.isActive === false)) {
+      return res.status(404).send('Your Nodes Email has not signed up!');
+    }
 
-      if (!value || value.toString() !== verificationCode) {
-        return res.status(403).send('Invalid verification code');
+    if (user.verificationCode !== verificationCode) {
+      return res.status(403).send('Invalid verification code!');
+    }
+
+    await collection.updateOne(
+      { email },
+      {
+        $set: {
+          last_time_online: new Date(),
+        },
       }
+    );
 
-      // Generate a token for the user
-      const token = jwt.sign({ _id: user._id }, 'YOUR_SECRET_KEY'); // Replace 'YOUR_SECRET_KEY' with your actual secret key
+    // Generate a token for the user
+    const token = jwt.sign({ _id: user._id }, 'YOUR_SECRET_KEY'); // Replace 'YOUR_SECRET_KEY' with your actual secret key
 
-      res.json({ token });
-    });
+    res.json({ token });
   } catch (error) {
     console.error('Error fetching data:', error);
     res.status(500).send('Error fetching data');
@@ -170,28 +236,33 @@ app.post('/signup', async (req, res) => {
   try {
     await client.connect();
     const database = client.db('dev');
-    const collection = database.collection('Users');
+    const collection = database.collection('NodesTeam');
     const { email, verificationCode, username } = req.body;
 
     const user = await collection.findOne({ email });
 
-    if (user) {
+    if (user && user.isActive) {
       return res.status(409).send('User already exists');
     }
 
-    const newUser = await collection.insertOne({ email, username });
+    if (user.verificationCode !== verificationCode) {
+      return res.status(403).send('Invalid verification code');
+    }
 
-    mc.get(email, (err, value) => {
-      if (err) throw err;
-
-      if (!value || value.toString() !== verificationCode) {
-        return res.status(403).send('Invalid verification code');
+    await collection.updateOne(
+      { email },
+      {
+        $set: {
+          isActive: true,
+          username: username,
+          last_time_online: new Date(),
+        },
       }
+    );
 
-      const token = jwt.sign({ _id: newUser.insertedId }, 'YOUR_SECRET_KEY'); // Replace 'YOUR_SECRET_KEY' with your actual secret key
+    const token = jwt.sign({ _id: user._id }, 'YOUR_SECRET_KEY'); // Replace 'YOUR_SECRET_KEY' with your actual secret key
+    res.json({ token });
 
-      res.json({ token });
-    });
   } catch (error) {
     console.error('Error fetching data:', error);
     res.status(500).send('Error fetching data');
@@ -201,14 +272,54 @@ app.post('/signup', async (req, res) => {
 });
 
 app.post('/sendVerificationCode', async (req, res) => {
-  const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-  mc.set(req.body.email, verificationCode, { expires: 300 }, (err, val) => {
-    if (err) throw err;
+  try {
+    await client.connect();
+    const database = client.db('dev');
+    const collection = database.collection('NodesTeam');
+    const { email } = req.body;
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Store the verification code in MongoDB
+    await collection.updateOne(
+      { email },
+      {
+        $set: {
+          verificationCode: verificationCode,
+        },
+        $setOnInsert: {
+          isActive: false,
+        },
+      },
+      { upsert: true }
+    );
+
+    let date = new Date();
+    date.setMinutes(date.getMinutes() + 5);
+    schedule.scheduleJob(date, async function() {
+      try {
+        console.log('Deleting verification code');
+        const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+        await client.connect();
+        const database = client.db('dev');
+        const collection = database.collection('NodesTeam');
+        await collection.updateOne(
+          { email },
+          {
+            $set: {
+              verificationCode: null,
+            },
+          }
+        );
+      await client.close();
+    } catch (error) {
+      console.error('Error updating data:', error);
+    }
+    });
 
     // Send the verification code via email
     let mailOptions = {
       from: 'shaoyan.li@nodesadvisors.com', // Replace with your email
-      to: req.body.email,
+      to: email,
       subject: 'Your verification code @ NodesAdvisors',
       text: 'Your verification code is: ' + verificationCode
     };
@@ -222,7 +333,12 @@ app.post('/sendVerificationCode', async (req, res) => {
         res.status(200).send('Email sent');
       }
     });
-  });
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    res.status(500).send('Error fetching data');
+  } finally {
+    await client.close();
+  }
 });
 
 app.post('/verifyToken', verifyToken, async (req, res) => {
@@ -238,7 +354,7 @@ async function verifyToken(req, res, next) {
 
     await client.connect();
     const database = client.db('dev');
-    const collection = database.collection('Users');
+    const collection = database.collection('NodesTeam');
     const user = await collection.findOne({ _id: verified._id });
     await client.close();
 
