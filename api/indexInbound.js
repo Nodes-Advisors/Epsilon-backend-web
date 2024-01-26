@@ -166,6 +166,42 @@ app.post('/sendRequest', async (req, res) => {
   }
 });
 
+app.get('/getUser', async (req, res) => {
+  try {
+    await client.connect();
+    const database = client.db('dev');
+    const collection = database.collection('NodesTeam');
+    const email = req.query.email;
+
+    const user = await collection.findOne({ email: email });
+
+    if (user) {
+      res.status(200).json(user);
+    } else {
+      res.status(404).send('User not found');
+    }
+  } catch (error) {
+    console.error('Error getting user:', error);
+    res.status(500).send('Error getting user');
+  } finally {
+    await client.close();
+  }
+});
+
+
+app.get('/fundStatus', async (req, res) => {
+  try {
+    await client.connect();
+    const database = client.db('dev');
+    const collection = database.collection('LPs');
+    const fundStatus = await collection.find({}).toArray();
+    res.json(fundStatus);
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    res.status(500).send('Error fetching data');
+  }
+});
+
 app.post('/logout', async (req, res) => {
   try {
     await client.connect();
