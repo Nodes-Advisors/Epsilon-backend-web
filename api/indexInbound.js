@@ -58,7 +58,6 @@ app.get('/', async (req, res) => {
 
 app.get('/employees', async (req, res) => {
   try {
-    await client.connect();
     const database = client.db('dev');
     const collection = database.collection('Employees');
     const employees = await collection.find({}).toArray();
@@ -66,14 +65,11 @@ app.get('/employees', async (req, res) => {
   } catch (error) {
     console.error('Error fetching data:', error);
     res.status(500).send('Error fetching data');
-  } finally {
-    await client.close();
-  }
+  } 
 });
 
 app.get('/fundcard', async (req, res) => {
   try {
-    await client.connect();
     const database = client.db('dev');
     const collection = database.collection('FundCard');
     const employees = await collection.find({}).toArray();
@@ -81,14 +77,11 @@ app.get('/fundcard', async (req, res) => {
   } catch (error) {
     console.error('Error fetching data:', error);
     res.status(500).send('Error fetching data');
-  } finally {
-    await client.close();
-  }
+  } 
 });
 
 app.get('/inboundemails', async (req, res) => {
   try {
-    await client.connect();
     const database = client.db('dev');
     const collection = database.collection('InboundEmails');
     const employees = await collection.find({}).limit(500).toArray();
@@ -96,14 +89,11 @@ app.get('/inboundemails', async (req, res) => {
   } catch (error) {
     console.error('Error fetching data:', error);
     res.status(500).send('Error fetching data');
-  } finally {
-    await client.close();
-  }
+  } 
 });
 
 app.get('/kpisInfo', async (req, res) => {
   try {
-    await client.connect();
     const database = client.db('dev');
     const collection = database.collection('KPIsInfo');
     const employees = await collection.find({}).toArray();
@@ -111,14 +101,11 @@ app.get('/kpisInfo', async (req, res) => {
   } catch (error) {
     console.error('Error fetching data:', error);
     res.status(500).send('Error fetching data');
-  } finally {
-    await client.close();
-  }
+  } 
 });
 
 app.get('/outboundEmails', async (req, res) => {
   try {
-    await client.connect();
     const database = client.db('dev');
     const collection = database.collection('OutboundEmails');
     const employees = await collection.find({}).limit(500).toArray();
@@ -126,15 +113,12 @@ app.get('/outboundEmails', async (req, res) => {
   } catch (error) {
     console.error('Error fetching data:', error);
     res.status(500).send('Error fetching data');
-  } finally {
-    await client.close();
-  }
+  } 
 });
 
 app.post('/sendRequest', async (req, res) => {
   console.log('sendRequest');
   try {
-    await client.connect();
     const database = client.db('dev');
     const collection = database.collection('UsersFundRequests');
     const { 
@@ -161,14 +145,11 @@ app.post('/sendRequest', async (req, res) => {
   } catch (error) {
     console.error('Error updating data:', error);
     res.status(500).send('Error updating data');
-  } finally {
-    await client.close();
-  }
+  } 
 });
 
 app.get('/getUser', async (req, res) => {
   try {
-    await client.connect();
     const database = client.db('dev');
     const collection = database.collection('NodesTeam');
     const email = req.query.email;
@@ -183,15 +164,12 @@ app.get('/getUser', async (req, res) => {
   } catch (error) {
     console.error('Error getting user:', error);
     res.status(500).send('Error getting user');
-  } finally {
-    await client.close();
-  }
+  } 
 });
 
 
 app.get('/fundStatus', async (req, res) => {
   try {
-    await client.connect();
     const database = client.db('dev');
     const collection = database.collection('LPs');
     const fundStatus = await collection.find({}).toArray();
@@ -204,7 +182,6 @@ app.get('/fundStatus', async (req, res) => {
 
 app.post('/logout', async (req, res) => {
   try {
-    await client.connect();
     const database = client.db('dev');
     const collection = database.collection('NodesTeam');
     const { email } = req.body;
@@ -221,14 +198,11 @@ app.post('/logout', async (req, res) => {
   } catch (error) {
     console.error('Error updating data:', error);
     res.status(500).send('Error updating data');
-  } finally {
-    await client.close();
-  }
+  } 
 });
 
 app.post('/login', async (req, res) => {
   try {
-    await client.connect();
     const database = client.db('dev');
     const collection = database.collection('NodesTeam');
     const { email, verificationCode } = req.body;
@@ -263,14 +237,11 @@ app.post('/login', async (req, res) => {
   } catch (error) {
     console.error('Error fetching data:', error);
     res.status(500).send('Error fetching data');
-  } finally {
-    await client.close();
-  }
+  } 
 });
 
 app.post('/signup', async (req, res) => {
   try {
-    await client.connect();
     const database = client.db('dev');
     const collection = database.collection('NodesTeam');
     const { email, verificationCode, username } = req.body;
@@ -302,14 +273,11 @@ app.post('/signup', async (req, res) => {
   } catch (error) {
     console.error('Error fetching data:', error);
     res.status(500).send('Error fetching data');
-  } finally {
-    await client.close();
   }
 });
 
 app.post('/sendVerificationCode', async (req, res) => {
   try {
-    await client.connect();
     const database = client.db('dev');
     const collection = database.collection('NodesTeam');
     const { email } = req.body;
@@ -330,12 +298,10 @@ app.post('/sendVerificationCode', async (req, res) => {
     );
 
     let date = new Date();
-    date.setMinutes(date.getMinutes() + 5);
+    date.setMinutes(date.getMinutes() + 1);
     schedule.scheduleJob(date, async function() {
       try {
         console.log('Deleting verification code');
-        const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
-        await client.connect();
         const database = client.db('dev');
         const collection = database.collection('NodesTeam');
         await collection.updateOne(
@@ -346,7 +312,7 @@ app.post('/sendVerificationCode', async (req, res) => {
             },
           }
         );
-      await client.close();
+
     } catch (error) {
       console.error('Error updating data:', error);
     }
@@ -372,9 +338,7 @@ app.post('/sendVerificationCode', async (req, res) => {
   } catch (error) {
     console.error('Error fetching data:', error);
     res.status(500).send('Error fetching data');
-  } finally {
-    await client.close();
-  }
+  } 
 });
 
 app.post('/verifyToken', verifyToken, async (req, res) => {
@@ -388,11 +352,9 @@ async function verifyToken(req, res, next) {
   try {
     const verified = jwt.verify(token, 'YOUR_SECRET_KEY'); // Replace 'YOUR_SECRET_KEY' with your actual secret key
 
-    await client.connect();
     const database = client.db('dev');
     const collection = database.collection('NodesTeam');
     const user = await collection.findOne({ _id: verified._id });
-    await client.close();
 
     // Check if the email in the request body matches the email of the user
     if (req.body.email !== user.email) {
