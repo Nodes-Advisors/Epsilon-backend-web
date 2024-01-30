@@ -282,12 +282,26 @@ app.get('/outboundEmails', async (req, res) => {
   } 
 });
 
+app.get('/getPendingRequests', async (req, res) => {
+  try {
+    const database = client.db('dev');
+    const collection = database.collection('UsersFundRequests');
+    const requests = await collection.find({
+      'Status': 'Pending'
+    }).toArray();
+    res.json(requests);
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    res.status(500).send('Error fetching data');
+  }
+});
+
 app.post('/sendRequest', async (req, res) => {
-  console.log('sendRequest');
   try {
     const database = client.db('dev');
     const collection = database.collection('UsersFundRequests');
     const { 
+      selectedFundName,
       requestName,
       approvers,
       deal,
@@ -304,7 +318,9 @@ app.post('/sendRequest', async (req, res) => {
       'Contact Person': contactPerson,
       'Priority': priority,
       'Additional details': details,
-      'Created by': email
+      'Created by': email,
+      'Status': 'Pending',
+      'Fund Name': selectedFundName,
     });
 
     res.status(200).send('Send request successfully!');
@@ -363,7 +379,7 @@ app.get('/getClients', async (req, res) => {
 app.get('/getAllFunds', async (req, res) => {
   try {
     const database = client.db('dev');
-    const collection = database.collection('FundCard');
+    const collection = database.collection('FundCard2');
     const funds = await collection.find({}).toArray();
     res.json(funds);
   } catch (error) {
