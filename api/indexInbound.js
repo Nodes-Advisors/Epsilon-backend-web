@@ -101,7 +101,7 @@ app.post('/signup', async (req, res) => {
       }
     );
 
-    const expiration_date = Math.floor(Date.now() / 1000) + (60 * 5); // Current time in seconds + one hour
+    const expiration_date = Math.floor(Date.now() / 1000) + (60 * 60 * 24); // Current time in seconds + one hour
     const token = jwt.sign({ email: user.email, expiration_date }, 'YOUR_SECRET_KEY'); // Replace 'YOUR_SECRET_KEY' with your actual secret key
 
     res.json({ token });
@@ -360,7 +360,7 @@ app.get('/getClients', async (req, res) => {
   }
 });
 
-app.get('getAllFunds', async (req, res) => {
+app.get('/getAllFunds', async (req, res) => {
   try {
     const database = client.db('dev');
     const collection = database.collection('FundCard');
@@ -372,7 +372,22 @@ app.get('getAllFunds', async (req, res) => {
   }
 });
 
+app.get('/fundrisingpipeline', async (req, res) => {
+  try {
+    const database = client.db('dev');
+    const collection = database.collection('FundraisingPipeline');
+    const infos = await collection.find({}).toArray();
+    infos.reverse();
+    res.json(infos);
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    res.status(500).send('Error fetching data');
+  }
+});
 
+app.get('/verifyToken', verifyToken, (req, res) => {
+  res.status(200).send('Token is valid and not expired');
+});
 
 async function verifyToken(req, res, next) {
   const token = req.header('Authorization');
