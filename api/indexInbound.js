@@ -429,6 +429,63 @@ async function verifyToken(req, res, next) {
   }
 }
 
+// get all collections name from dev database
+app.get('/getCollections', async (req, res) => {
+  try {
+    const database = client.db('dev');
+    const collections = (await database.listCollections().toArray()).map(collection => collection.name);
+    res.json(collections);
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    res.status(500).send('Error fetching data');
+  }
+});
+
+app.get('/getCollections/:collectionName', async (req, res) => {
+  try {
+    const database = client.db('dev');
+    const collectionName = req.params.collectionName;
+    const collection = database.collection(collectionName);
+
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = parseInt(req.query.pageSize) || 500;
+
+    // Parse filters from query parameters
+    const filters = req.query.filters ? JSON.parse(req.query.filters) : {};
+    console.log(filters);
+    console.log(page);
+    // if (Object.keys(filters).length === 0) {
+    
+    // }
+    
+    const documents = await collection.find(filters)
+      .skip((page - 1) * pageSize)
+      .limit(pageSize)
+      .toArray();
+    console.log(documents)
+    res.json(documents);
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    res.status(500).send('Error fetching data');
+  }
+});
+
+app.get('/getUniqueValues/:collectionName/:fieldName', async (req, res) => {
+  try {
+    const database = client.db('dev');
+    const collectionName = req.params.collectionName;
+    const fieldName = req.params.fieldName;
+    const collection = database.collection(collectionName);
+
+    const uniqueValues = await collection.distinct(fieldName);
+    res.json(uniqueValues);
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    res.status(500).send('Error fetching data');
+  }
+});
+
+
 app.listen(5001, async () => {
   console.log('API is working!');
   await connectToMongoDB();
