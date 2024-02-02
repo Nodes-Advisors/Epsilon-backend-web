@@ -392,8 +392,8 @@ app.get('/fundrisingpipeline', async (req, res) => {
   try {
     const database = client.db('dev');
     const collection = database.collection('FundraisingPipeline');
-    const infos = await collection.find({}).toArray();
-    infos.reverse();
+    const infos = await collection.find({}).sort({last_updated_status_date: -1}).toArray();
+  
     res.json(infos);
   } catch (error) {
     console.error('Error fetching data:', error);
@@ -451,9 +451,9 @@ app.get('/getCollections/:collectionName', async (req, res) => {
     const pageSize = parseInt(req.query.pageSize) || 500;
 
     // Parse filters from query parameters
-    const filters = req.query.filters ? JSON.parse(req.query.filters) : {};
-    console.log(filters);
-    console.log(page);
+    const filters = req.query.filters || Object.keys(filters).length > 0 ? JSON.parse(req.query.filters) : {};
+    // console.log("filters", filters);
+    // console.log("page", page);
     // if (Object.keys(filters).length === 0) {
     
     // }
@@ -462,7 +462,7 @@ app.get('/getCollections/:collectionName', async (req, res) => {
       .skip((page - 1) * pageSize)
       .limit(pageSize)
       .toArray();
-    console.log(documents)
+    // console.log(documents)
     res.json(documents);
   } catch (error) {
     console.error('Error fetching data:', error);
@@ -485,6 +485,21 @@ app.get('/getUniqueValues/:collectionName/:fieldName', async (req, res) => {
   }
 });
 
+app.get('/getFields/:collectionName', async (req, res) => {
+  try {
+    const database = client.db('dev');
+    const collectionName = req.params.collectionName;
+    const collection = database.collection(collectionName);
+
+    const document = await collection.findOne({});
+    const fields = document ? Object.keys(document) : [];
+    // console.log(fields);
+    res.json(fields);
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    res.status(500).send('Error fetching data');
+  }
+});
 
 app.listen(5001, async () => {
   console.log('API is working!');
